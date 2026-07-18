@@ -157,7 +157,15 @@
         statusElement.textContent = '予約画面を準備しています…';
 
         const profile = await liff.getProfile();
-        moveToBooking(profile);
+
+        statusElement.textContent =
+  'LINE連携済み：' + (profile.displayName || '名前なし');
+
+        console.log('LINE profile:', profile);
+
+window.setTimeout(() => {
+  moveToBooking(profile);
+}, 2000);
 
       } catch (error) {
         console.error(error);
