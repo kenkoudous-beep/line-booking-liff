@@ -133,12 +133,13 @@
   const destination =
     BOOKING_URL +
     '?uid=' + userId +
-    '&name=' + displayName +
-    '&v=2';
+    '&name=' + displayName;
 
-  console.log('移動先URL:', destination);
+  statusElement.textContent = destination;
 
-  window.location.href = destination;
+  window.setTimeout(() => {
+    window.location.href = destination;
+  }, 5000);
 }
 
     async function startLiff() {
