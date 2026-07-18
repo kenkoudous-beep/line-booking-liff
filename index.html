@@ -127,13 +127,19 @@
     }
 
     function moveToBooking(profile) {
-      const params = new URLSearchParams({
-        uid: profile.userId || '',
-        name: profile.displayName || ''
-      });
+  const userId = encodeURIComponent(profile.userId || '');
+  const displayName = encodeURIComponent(profile.displayName || '');
 
-      window.location.replace(BOOKING_URL + '?' + params.toString());
-    }
+  const destination =
+    BOOKING_URL +
+    '?uid=' + userId +
+    '&name=' + displayName +
+    '&v=2';
+
+  console.log('移動先URL:', destination);
+
+  window.location.href = destination;
+}
 
     async function startLiff() {
       errorElement.style.display = 'none';
