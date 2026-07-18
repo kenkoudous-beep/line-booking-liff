@@ -1,17 +1,179 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<title>LINE予約</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>LINE予約</title>
+
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+
+  <style>
+    :root {
+      --main: #1f6f8b;
+      --bg: #f5f8fa;
+      --card: #ffffff;
+      --text: #223;
+      --muted: #667;
+      --error-bg: #fdebec;
+      --error-text: #8a1f27;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans JP", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 520px;
+      background: var(--card);
+      border-radius: 16px;
+      padding: 28px 22px;
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
+      text-align: center;
+    }
+
+    h1 {
+      margin: 0 0 12px;
+      color: var(--main);
+      font-size: 26px;
+    }
+
+    p {
+      margin: 8px 0;
+      line-height: 1.7;
+      color: var(--muted);
+    }
+
+    .spinner {
+      width: 44px;
+      height: 44px;
+      margin: 24px auto;
+      border: 5px solid #dbe8ed;
+      border-top-color: var(--main);
+      border-radius: 50%;
+      animation: spin 0.9s linear infinite;
+    }
+
+    .error {
+      display: none;
+      margin-top: 18px;
+      padding: 14px;
+      border-radius: 10px;
+      background: var(--error-bg);
+      color: var(--error-text);
+      white-space: pre-wrap;
+      text-align: left;
+      line-height: 1.6;
+    }
+
+    button {
+      display: none;
+      width: 100%;
+      margin-top: 18px;
+      padding: 14px;
+      border: 0;
+      border-radius: 10px;
+      background: var(--main);
+      color: #fff;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
 </head>
 
-<body style="font-family:sans-serif;text-align:center;margin-top:80px">
+<body>
+  <main class="card">
+    <h1>LINE予約</h1>
+    <p id="status">LINE情報を確認しています…</p>
+    <div id="spinner" class="spinner" aria-hidden="true"></div>
+    <div id="error" class="error"></div>
+    <button id="retryButton" type="button">もう一度試す</button>
+  </main>
 
-<h1>LINE予約システム</h1>
+  <script>
+    const LIFF_ID = '2010752985-dPyeTXox';
 
-<p>GitHub Pagesの準備が完了しました。</p>
+    const BOOKING_URL =
+      'https://script.google.com/macros/s/AKfycbYqEEghKF8wtLM3tZfp8hVSVvjKEz2_XxNM0REFuh1x_vGWlcLP0QaaZLQz9k-E-bd0/exec';
 
-<p>次のステップでLIFFを組み込みます。</p>
+    const statusElement = document.getElementById('status');
+    const spinnerElement = document.getElementById('spinner');
+    const errorElement = document.getElementById('error');
+    const retryButton = document.getElementById('retryButton');
 
+    function showError(message) {
+      spinnerElement.style.display = 'none';
+      statusElement.textContent = 'LINE連携に失敗しました。';
+      errorElement.textContent = message;
+      errorElement.style.display = 'block';
+      retryButton.style.display = 'block';
+    }
+
+    function moveToBooking(profile) {
+      const params = new URLSearchParams({
+        uid: profile.userId || '',
+        name: profile.displayName || ''
+      });
+
+      window.location.replace(BOOKING_URL + '?' + params.toString());
+    }
+
+    async function startLiff() {
+      errorElement.style.display = 'none';
+      retryButton.style.display = 'none';
+      spinnerElement.style.display = 'block';
+      statusElement.textContent = 'LINE情報を確認しています…';
+
+      try {
+        if (typeof liff === 'undefined') {
+          throw new Error('LIFF SDKを読み込めませんでした。通信状態を確認してください。');
+        }
+
+        await liff.init({ liffId: LIFF_ID });
+
+        if (!liff.isLoggedIn()) {
+          statusElement.textContent = 'LINEログイン画面へ移動します…';
+          liff.login({ redirectUri: window.location.href });
+          return;
+        }
+
+        statusElement.textContent = '予約画面を準備しています…';
+
+        const profile = await liff.getProfile();
+        moveToBooking(profile);
+
+      } catch (error) {
+        console.error(error);
+
+        const code = error && error.code ? error.code + '：' : '';
+        const message = error && error.message ? error.message : String(error);
+
+        showError(
+          code + message +
+          '\n\n画面を閉じて、LINEからもう一度予約ページを開いてください。'
+        );
+      }
+    }
+
+    retryButton.addEventListener('click', startLiff);
+    window.addEventListener('load', startLiff);
+  </script>
 </body>
 </html>
