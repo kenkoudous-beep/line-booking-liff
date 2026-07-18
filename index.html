@@ -174,10 +174,9 @@ statusElement.textContent =
   '名前：' + (profile.displayName || '取得できません') +
   '／ID：' + (profile.userId || '取得できません');
 
-// 一時的に自動移動を止める
-// window.setTimeout(() => {
-//   moveToBooking(profile);
-// }, 2000);
+window.setTimeout(() => {
+  moveToBooking(profile);
+}, 5000);
 
       } catch (error) {
         console.error(error);
